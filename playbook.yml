@@ -1,0 +1,46 @@
+---
+- name: Use shell module to run echo command
+  hosts: all
+  become: yes
+  vars:
+      administrator_name: corpadmin
+  tasks:
+      - name: Update all the packages
+        shell: yum update
+      - name: Create users
+        shell: useradd -m -p mypass {{administrator_name}}
+- name: Setup a webserver
+  hosts: web1
+  become: yes
+  tasks:
+      - name: Install webserver package
+        yum:
+          name: nginx
+          state: present
+      - name: Start webserver
+        service:
+          name: nginx
+          enabled: yes
+          state: started
+- name: Setup the database
+  hosts: database1
+  become: yes
+  tasks:
+       - name: Download the mysql server package
+         yum:
+           name: mysql-server
+           state: present
+       - name: Install the mysql server package
+         yum:
+           name: mysql-server
+           state: installed
+       - name: Start mysql
+         service:
+           name: mysqld
+           enabled: yes
+           state: started
+       - name: Create directories
+         file:
+           dest: "/var/data/{{ item }}"
+           state: directory
+           with_sequence: start=1 end=5 stride=2 
