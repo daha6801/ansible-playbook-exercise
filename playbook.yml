@@ -7,6 +7,8 @@
   tasks:
       - name: Update all the packages
         shell: yum update
+      - name: Delete user if exists
+        shell: sudo userdel -r {{administrator_name}}
       - name: Create users
         shell: useradd -m -p mypass {{administrator_name}}
 - name: Setup a webserver
@@ -16,7 +18,11 @@
       - name: Install webserver package
         yum:
           name: nginx
-          state: present
+          state: latest
+      - name: Copy default.conf.j2 file
+        template:
+          src: default.conf.j2
+          dest: /etc/nginx/conf.d/default.conf
       - name: Start webserver
         service:
           name: nginx
@@ -34,13 +40,11 @@
          yum:
            name: mysql-server
            state: installed
-       - name: Start mysql
-         service:
+       - name: Start the mysql server
+         service: 
            name: mysqld
            enabled: yes
            state: started
-       - name: Create directories
-         file:
-           dest: "/var/data/{{ item }}"
-           state: directory
-           with_sequence: start=1 end=5 stride=2 
+       - name: create a series of directories
+         file: dest=/var/data/client{{ item }} state=directory
+         with_sequence: start=1 end=5
